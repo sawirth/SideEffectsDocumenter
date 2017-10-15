@@ -15,4 +15,17 @@ dependencies {
     compile 'com.github.javaparser:java-symbol-solver-core:0.5.5'
     compile 'com.google.code.gson:gson:2.8.2'
     compile "com.google.inject:guice:4.1.0"
+    compile group: 'com.beust', name: 'jcommander', version: '1.72'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.6'
+}
+
+allprojects {
+    apply plugin: 'idea'
+    idea {
+        module {
+            inheritOutputDirs = false
+            outputDir = file('build/classes/main')
+            testOutputDir = file('build/classes/test')
+        }
+    }
 }

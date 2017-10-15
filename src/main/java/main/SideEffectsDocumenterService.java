@@ -4,14 +4,11 @@ import ch.sawirth.model.*;
 import ch.sawirth.model.purano.ClassRepresentation;
 import ch.sawirth.model.purano.MethodRepresentation;
 import ch.sawirth.services.*;
-import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.google.inject.Inject;
-
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;

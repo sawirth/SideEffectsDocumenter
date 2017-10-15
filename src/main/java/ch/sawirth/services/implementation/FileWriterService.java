@@ -2,7 +2,6 @@ package ch.sawirth.services.implementation;
 
 import ch.sawirth.services.IFileWriterService;
 import com.google.inject.Inject;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
