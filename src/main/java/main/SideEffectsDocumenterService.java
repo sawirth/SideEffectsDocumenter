@@ -83,10 +83,13 @@ public class SideEffectsDocumenterService {
                 }
                 else
                 {
-                    logger.warning(String.format("No MethodDeclaration found for method %s", methodDeclaration.getNameAsString()));
+                    logger.warning(String.format("No MethodDeclaration found for method %s.%s",
+                                                 pair.classDeclaration.getNameAsString(),
+                                                 methodDeclaration.getNameAsString()));
                 }
             }
         }
+
         return methodAndPurityResultPairs;
     }
 

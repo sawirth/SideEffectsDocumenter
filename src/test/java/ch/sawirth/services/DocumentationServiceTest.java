@@ -50,6 +50,7 @@ public class DocumentationServiceTest {
         MethodRepresentation methodRepresentation = new MethodRepresentation(
                 "test",
                 purityType,
+                Collections.emptyList(),
                 Collections.emptyList());
 
         MethodDeclaration methodDeclaration = new MethodDeclaration();

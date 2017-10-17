@@ -5,6 +5,7 @@ import ch.sawirth.services.IDocumentationService;
 import ch.sawirth.services.IMessageCreationService;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.google.inject.Inject;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class ExtendedDocumentationService implements IDocumentationService {
 
@@ -17,8 +18,7 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
     @Override
     public MethodDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
-        //TODO
-
-        return null;
+        //TODO implement extended documentation
+        throw new NotImplementedException();
     }
 }

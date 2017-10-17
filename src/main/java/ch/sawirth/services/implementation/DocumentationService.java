@@ -12,7 +12,6 @@ public class DocumentationService implements IDocumentationService{
 
     private static final String PURITY_REGEX = "[*]+\\s<b>Purity:[a-zA-Z0-9 ]+</b><br>";
 
-
     @Override
     public MethodDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
         createAndAddNewJavaDocComment(methodAndPurityResultPair.methodDeclaration,
