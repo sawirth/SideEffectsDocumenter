@@ -29,3 +29,15 @@ allprojects {
         }
     }
 }
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle jar example',
+                'Implementation-Version': version,
+                'Main-Class': 'main.Main'
+    }
+
+    baseName = project.name + '-all'
+    from { configurations.compile.collect {it.isDirectory() ? it : zipTree(it)} }
+    with jar
+}
