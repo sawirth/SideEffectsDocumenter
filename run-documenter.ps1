@@ -3,10 +3,10 @@ $jar = 'C:\Users\Sandro\Documents\GitHub\SideEffectsDocumenter\build\libs\SideEf
 $main = 'main.Main'
 
 # Purano result path
-$puranoPath = 'C:\Users\Sandro\Documents\GitHub\joda-time\Purano-Result.json'
+$puranoPath = 'C:\Users\Sandro\Documents\GitHub\slf4j\Purano-Result.json'
 
 # root of -java files
-$javaRoot = 'C:\Users\Sandro\Documents\GitHub\joda-time\src\main\java'
+$javaRoot = 'C:\Users\Sandro\Documents\GitHub\slf4j\'
 
 
 & $java -jar $jar $javaRoot -p $puranoPath

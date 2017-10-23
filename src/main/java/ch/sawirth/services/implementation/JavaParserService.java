@@ -3,6 +3,8 @@ package ch.sawirth.services.implementation;
 import ch.sawirth.model.JavaParserResult;
 import ch.sawirth.services.IJavaParserService;
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,10 +18,15 @@ public class JavaParserService implements IJavaParserService {
 
         Set<JavaParserResult> javaParserResults = new HashSet<>();
         filePaths.forEach(path -> {
+            CompilationUnit cu = null;
             try {
-                javaParserResults.add(new JavaParserResult(path, JavaParser.parse(path)));
+                cu = JavaParser.parse(path);
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+
+            if (cu != null) {
+                javaParserResults.add(new JavaParserResult(path, cu));
             }
         });
 

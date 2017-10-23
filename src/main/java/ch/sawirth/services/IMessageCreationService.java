@@ -1,8 +1,10 @@
 package ch.sawirth.services;
 
-import ch.sawirth.model.purano.FieldModifier;
-import com.github.javaparser.ast.body.MethodDeclaration;
+import ch.sawirth.model.purano.ArgumentModifier;
+import com.github.javaparser.ast.body.Parameter;
+
+import java.util.List;
 
 public interface IMessageCreationService {
-    String createFieldModifierMessage(FieldModifier fieldModifier, MethodDeclaration methodDeclaration);
+    List<String> createArgumentModifierMessage(List<ArgumentModifier> argumentModifiers, List<Parameter> parameters);
 }

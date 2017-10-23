@@ -26,5 +26,6 @@ public class SideEffectsDocumenterModule extends AbstractModule {
         bind(IMatchingService.class).to(MatchingService.class);
         bind(IFileWriterService.class).to(FileWriterService.class);
         bind(IMessageCreationService.class).to(MessageCreationService.class);
+        bind(IJavadocCommentService.class).to(JavadocCommentService.class);
     }
 }

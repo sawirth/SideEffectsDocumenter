@@ -7,14 +7,20 @@ public class MethodRepresentation {
     public final String purityType;
     public final List<MethodArgument> methodArguments;
     public final List<FieldModifier> fieldModifiers;
+    public final List<FieldModifier> staticFieldModifiers;
+    public final List<ArgumentModifier> argumentModifiers;
 
     public MethodRepresentation(String name,
                                 String purityType,
                                 List<MethodArgument> methodArguments,
-                                List<FieldModifier> fieldModifiers) {
+                                List<FieldModifier> fieldModifiers,
+                                List<FieldModifier> staticFieldModifiers,
+                                List<ArgumentModifier> argumentModifiers) {
         this.name = name;
         this.purityType = purityType;
         this.methodArguments = methodArguments;
         this.fieldModifiers = fieldModifiers;
+        this.staticFieldModifiers = staticFieldModifiers;
+        this.argumentModifiers = argumentModifiers;
     }
 }

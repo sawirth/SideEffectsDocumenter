@@ -51,6 +51,8 @@ public class DocumentationServiceTest {
                 "test",
                 purityType,
                 Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
                 Collections.emptyList());
 
         MethodDeclaration methodDeclaration = new MethodDeclaration();
