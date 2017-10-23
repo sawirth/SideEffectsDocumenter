@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class DocumentationServiceTest {
 
@@ -53,7 +54,8 @@ public class DocumentationServiceTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                null);
 
         MethodDeclaration methodDeclaration = new MethodDeclaration();
         if (javaDocContent != null) {

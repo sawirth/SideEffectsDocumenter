@@ -2,6 +2,7 @@ package ch.sawirth.services.implementation;
 
 import ch.sawirth.model.MethodAndPurityResultPair;
 import ch.sawirth.model.purano.MethodRepresentation;
+import ch.sawirth.model.purano.ReturnDependency;
 import ch.sawirth.services.IDocumentationService;
 import ch.sawirth.services.IJavadocCommentService;
 import ch.sawirth.services.IMessageCreationService;
@@ -32,18 +33,35 @@ public class ExtendedDocumentationService implements IDocumentationService {
         List<String> linesForComment = new ArrayList<>();
 
         if (!methodRep.argumentModifiers.isEmpty()) {
-            linesForComment.addAll(messageCreationService.createArgumentModifierMessage(methodRep.argumentModifiers, methodDeclaration.getParameters()));
-            linesForComment.add("");
+            linesForComment.addAll(messageCreationService.createArgumentModifierMessage(methodRep.argumentModifiers,
+                                                                                        methodDeclaration.getParameters()));
         }
 
         if (!methodRep.staticFieldModifiers.isEmpty()) {
+            if (!linesForComment.isEmpty()) {
+                linesForComment.add("");
+            }
+
             linesForComment.addAll(messageCreationService.createStaticModifiersMessage(methodRep.staticFieldModifiers));
             linesForComment.add("");
         }
 
+        if (hasReturnDependencyInfo(methodRep.returnDependency)) {
+            if (!linesForComment.isEmpty()) {
+                linesForComment.add("");
+            }
+
+            linesForComment.addAll(messageCreationService.createReturnDependencyMessage(methodRep.returnDependency,
+                                                                                        methodDeclaration.getParameters()));
+        }
+
+        //Todo Native
+
         if (linesForComment.size() <= 0) {
             return methodDeclaration;
         }
+
+        linesForComment = clearEmptyLines(linesForComment);
 
         JavadocComment comment;
         if (hasAlreadyJavadoc) {
@@ -59,5 +77,26 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
         methodDeclaration.setJavadocComment(comment);
         return methodDeclaration;
+    }
+
+    private List<String> clearEmptyLines(List<String> lines) {
+        List<String> cleanedLines = new ArrayList<>();
+        cleanedLines.add(lines.get(0));
+
+        for (int i = 1; i < lines.size(); i++) {
+            if (lines.get(i -1).equals("") && lines.get(i).equals("")) {
+                continue;
+            }
+
+            cleanedLines.add(lines.get(i));
+        }
+
+        return cleanedLines;
+    }
+
+    private boolean hasReturnDependencyInfo(ReturnDependency returnDependency) {
+        return !returnDependency.fieldDependencies.isEmpty()
+                || !returnDependency.indexOfDependentArguments.isEmpty()
+                || !returnDependency.staticFieldDependencies.isEmpty();
     }
 }
