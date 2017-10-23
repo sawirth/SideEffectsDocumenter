@@ -9,7 +9,7 @@ public class JavadocCommentService implements IJavadocCommentService {
     @Override
     public JavadocComment appendToComment(JavadocComment comment, List<String> additionalLines) {
         int column = comment.getRange().get().begin.column;
-        String additionalContent = buildStringFromLines(additionalLines, column);
+        String additionalContent = buildStringFromLines(additionalLines, column, false);
         String existingContent = comment.getContent();
         comment.setContent(existingContent + additionalContent);
         return comment.clone();
@@ -17,14 +17,14 @@ public class JavadocCommentService implements IJavadocCommentService {
 
     @Override
     public JavadocComment createNewComment(List<String> lines, int column) {
-        String content = System.lineSeparator() + buildStringFromLines(lines, column);
+        String content = System.lineSeparator() + buildStringFromLines(lines, column, true);
         return new JavadocComment(content);
     }
 
-    private String buildStringFromLines(List<String> lines, int column) {
+    private String buildStringFromLines(List<String> lines, int column, boolean isForNewComment) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < lines.size(); i++) {
-            if (i > 0) {
+            if (i > 0 || isForNewComment) {
                 sb.append(StringUtils.repeat(' ', column));
             }
 

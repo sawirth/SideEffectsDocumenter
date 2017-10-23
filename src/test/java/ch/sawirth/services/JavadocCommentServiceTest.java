@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class JavaDocCommentServiceTest {
+public class JavadocCommentServiceTest {
     private JavadocComment existingComment;
     private JavadocComment newComment;
 
@@ -65,9 +65,5 @@ public class JavaDocCommentServiceTest {
         String content = newComment.getContent();
         String[] lines = content.split("\r\n");
         Assert.assertEquals(expectedNumberOfLines, lines.length);
-    }
-
-    private void ThenLineIsIndentetBy(int expectedIndentation) {
-
     }
 }

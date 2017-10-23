@@ -1,6 +1,7 @@
 package ch.sawirth.services.implementation;
 
 import ch.sawirth.model.purano.ArgumentModifier;
+import ch.sawirth.model.purano.FieldModifier;
 import ch.sawirth.services.IMessageCreationService;
 import com.github.javaparser.ast.body.Parameter;
 import org.apache.commons.lang3.StringUtils;;
@@ -18,6 +19,22 @@ public class MessageCreationService implements IMessageCreationService {
             sb.append(StringUtils.repeat(' ', 4));
             String name = parameters.get(modifier.argumentIndex).getNameAsString();
             sb.append(name);
+            result.add(sb.toString());
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<String> createStaticModifiersMessage(List<FieldModifier> staticFieldModifiers) {
+        List<String> result = new ArrayList<>();
+        result.add("Modifies the following static fields:");
+
+        for (FieldModifier modifier : staticFieldModifiers) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(StringUtils.repeat(' ', 4));
+            sb.append(String.format("%s.%s (%s)" , StringUtils.substringAfterLast(modifier.owner, "/"),
+                                    modifier.name, modifier.type));
             result.add(sb.toString());
         }
 

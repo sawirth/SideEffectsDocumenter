@@ -33,6 +33,12 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
         if (!methodRep.argumentModifiers.isEmpty()) {
             linesForComment.addAll(messageCreationService.createArgumentModifierMessage(methodRep.argumentModifiers, methodDeclaration.getParameters()));
+            linesForComment.add("");
+        }
+
+        if (!methodRep.staticFieldModifiers.isEmpty()) {
+            linesForComment.addAll(messageCreationService.createStaticModifiersMessage(methodRep.staticFieldModifiers));
+            linesForComment.add("");
         }
 
         if (linesForComment.size() <= 0) {
