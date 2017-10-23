@@ -31,26 +31,22 @@ public class ExtendedDocumentationService implements IDocumentationService {
         boolean hasAlreadyJavadoc = methodDeclaration.getJavadoc().isPresent();
 
         List<String> linesForComment = new ArrayList<>();
+        linesForComment.add("Purity: " + methodRep.purityType);
 
         if (!methodRep.argumentModifiers.isEmpty()) {
+            linesForComment.add("");
             linesForComment.addAll(messageCreationService.createArgumentModifierMessage(methodRep.argumentModifiers,
                                                                                         methodDeclaration.getParameters()));
         }
 
         if (!methodRep.staticFieldModifiers.isEmpty()) {
-            if (!linesForComment.isEmpty()) {
-                linesForComment.add("");
-            }
-
+            linesForComment.add("");
             linesForComment.addAll(messageCreationService.createStaticModifiersMessage(methodRep.staticFieldModifiers));
             linesForComment.add("");
         }
 
         if (hasReturnDependencyInfo(methodRep.returnDependency)) {
-            if (!linesForComment.isEmpty()) {
-                linesForComment.add("");
-            }
-
+            linesForComment.add("");
             linesForComment.addAll(messageCreationService.createReturnDependencyMessage(methodRep.returnDependency,
                                                                                         methodDeclaration.getParameters()));
         }
