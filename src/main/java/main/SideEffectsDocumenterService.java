@@ -4,10 +4,7 @@ import ch.sawirth.model.*;
 import ch.sawirth.model.purano.ClassRepresentation;
 import ch.sawirth.model.purano.MethodRepresentation;
 import ch.sawirth.services.*;
-import com.github.javaparser.ast.body.BodyDeclaration;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.body.*;
 import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,7 +46,7 @@ public class SideEffectsDocumenterService {
         return parserService.parseFilesFromPath(rootPath);
     }
 
-    public Set<MethodDeclaration> createPurityDocumentations(
+    public Set<CallableDeclaration> createPurityDocumentations(
             Set<ClassRepresentation> classRepresentations,
             Set<JavaParserResult> javaParserResults)
     {
@@ -59,7 +56,7 @@ public class SideEffectsDocumenterService {
                                                                                                classDeclarations);
 
         Set<MethodAndPurityResultPair> methodAndPurityResultPairs = getMethodAndPurityResultPairs(classAndPurityResultPairs);
-        Set<MethodDeclaration> documentationResults = methodAndPurityResultPairs.stream()
+        Set<CallableDeclaration> documentationResults = methodAndPurityResultPairs.stream()
                 .map(documentationService::createDocumentation)
                 .collect(Collectors.toSet());
 
@@ -69,12 +66,12 @@ public class SideEffectsDocumenterService {
     private Set<MethodAndPurityResultPair> getMethodAndPurityResultPairs(Set<ClassAndPurityResultPair> classAndPurityResultPairs) {
         Set<MethodAndPurityResultPair> methodAndPurityResultPairs = new HashSet<>();
         for (ClassAndPurityResultPair pair : classAndPurityResultPairs) {
-            Set<MethodDeclaration> methodDeclarations = pair.classDeclaration.getMembers().stream()
-                    .filter(m -> m instanceof MethodDeclaration)
-                    .map(MethodDeclaration.class::cast)
+            Set<CallableDeclaration> methodDeclarations = pair.classDeclaration.getMembers().stream()
+                    .filter(m -> m instanceof CallableDeclaration)
+                    .map(CallableDeclaration.class::cast)
                     .collect(Collectors.toSet());
 
-            for (MethodDeclaration methodDeclaration : methodDeclarations) {
+            for (CallableDeclaration methodDeclaration : methodDeclarations) {
                 MethodRepresentation methodRepresentation = matchingService.findMatchingMethodRepresentation(
                         methodDeclaration, pair.classRepresentation.methodMap);
 
@@ -88,6 +85,11 @@ public class SideEffectsDocumenterService {
                                                  methodDeclaration.getNameAsString()));
                 }
             }
+
+            Set<ConstructorDeclaration> constructorDeclarations = pair.classDeclaration.getMembers().stream()
+                    .filter(m -> m instanceof ConstructorDeclaration)
+                    .map(ConstructorDeclaration.class::cast)
+                    .collect(Collectors.toSet());
         }
 
         return methodAndPurityResultPairs;

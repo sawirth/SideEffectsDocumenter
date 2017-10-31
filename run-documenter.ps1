@@ -3,10 +3,14 @@ $jar = 'C:\Users\Sandro\Documents\GitHub\SideEffectsDocumenter\build\libs\SideEf
 $main = 'main.Main'
 
 # Purano result path
-$puranoPath = 'C:\Users\Sandro\Documents\GitHub\slf4j\Purano-Result.json'
+$puranoPath = 'C:\Users\Sandro\Desktop\Purano\joda-time\Purano-Result.json'
 
 # root of -java files
-$javaRoot = 'C:\Users\Sandro\Documents\GitHub\slf4j\'
+$javaRoot = 'C:\Users\Sandro\Documents\GitHub\joda-time\src\main\'
 
 
-& $java -jar $jar $javaRoot -p $puranoPath
+# If set to true, the Javadoc contains detailed informations. Otherwise just the purity type
+$showExtended = True
+
+& $java -jar $jar $javaRoot -p $puranoPath -e $showExtended
+

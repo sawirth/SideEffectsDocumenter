@@ -3,19 +3,19 @@ package ch.sawirth.services;
 import ch.sawirth.model.MethodAndPurityResultPair;
 import ch.sawirth.model.purano.MethodRepresentation;
 import ch.sawirth.services.implementation.DocumentationService;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
+import com.github.javaparser.javadoc.Javadoc;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 public class DocumentationServiceTest {
 
     private MethodAndPurityResultPair methodAndPurityResultPair;
-    private MethodDeclaration methodDeclaration;
+    private CallableDeclaration methodDeclaration;
 
     @Test
     public void createDocumentation_MethodHasNoJavaDocComment_NewJavaDocCommentIsCreated() {
@@ -55,7 +55,8 @@ public class DocumentationServiceTest {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                null);
+                null,
+                Collections.emptySet());
 
         MethodDeclaration methodDeclaration = new MethodDeclaration();
         if (javaDocContent != null) {
@@ -72,11 +73,13 @@ public class DocumentationServiceTest {
     }
 
     private void ThenPurityInfoInJavaDocIs(String purityInfo) {
-        Assert.assertTrue(methodDeclaration.getJavadocComment().get().getContent().contains(purityInfo));
+        JavadocComment comment = (JavadocComment) methodDeclaration.getJavadocComment().get();
+        Assert.assertTrue(comment.getContent().contains(purityInfo));
     }
 
     private void ThenPurityInfoIsNotDuplicated() {
-        int count = StringUtils.countMatches(methodDeclaration.getJavadocComment().get().getContent(), "<b>Purity:");
+        JavadocComment comment = (JavadocComment) methodDeclaration.getJavadocComment().get();
+        int count = StringUtils.countMatches(comment.getContent(), "<b>Purity:");
         Assert.assertEquals(1, count);
     }
 }

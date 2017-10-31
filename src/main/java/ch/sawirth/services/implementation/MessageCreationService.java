@@ -1,10 +1,8 @@
 package ch.sawirth.services.implementation;
 
-import ch.sawirth.model.purano.ArgumentModifier;
-import ch.sawirth.model.purano.FieldDependency;
-import ch.sawirth.model.purano.FieldModifier;
-import ch.sawirth.model.purano.ReturnDependency;
+import ch.sawirth.model.purano.*;
 import ch.sawirth.services.IMessageCreationService;
+import ch.sawirth.utils.IODetectionHelper;
 import com.github.javaparser.ast.body.Parameter;
 import org.apache.commons.lang3.StringUtils;;
 import java.util.ArrayList;
@@ -13,6 +11,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MessageCreationService implements IMessageCreationService {
+
+    private final int indentionSpaces = 4;
+
     @Override
     public List<String> createArgumentModifierMessage(List<ArgumentModifier> argumentModifiers, List<Parameter> parameters) {
         List<String> result = new ArrayList<>();
@@ -20,8 +21,15 @@ public class MessageCreationService implements IMessageCreationService {
 
         for (ArgumentModifier modifier : argumentModifiers) {
             StringBuilder sb = new StringBuilder();
-            sb.append(StringUtils.repeat(' ', 4));
-            String name = parameters.get(modifier.argumentIndex).getNameAsString();
+            sb.append(StringUtils.repeat(' ', indentionSpaces));
+            String name = "";
+            try {
+                name = parameters.get(modifier.argumentIndex).getNameAsString();
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                continue;
+            }
+
             sb.append(name);
             result.add(sb.toString());
         }
@@ -36,16 +44,16 @@ public class MessageCreationService implements IMessageCreationService {
 
         for (FieldModifier modifier : staticFieldModifiers) {
             StringBuilder sb = new StringBuilder();
-            sb.append(StringUtils.repeat(' ', 4));
-            sb.append(String.format("%s.%s (%s)" , getShortOwner(modifier.owner), modifier.name, modifier.type));
+            sb.append(StringUtils.repeat(' ', indentionSpaces));
+            sb.append(String.format("%s.%s (%s)" ,
+                                    getShortOwner(modifier.owner, "/"),
+                                    modifier.name,
+                                    getShortOwner(modifier.type, "/")));
+
             result.add(sb.toString());
         }
 
         return result;
-    }
-
-    private String getShortOwner(String owner) {
-        return StringUtils.substringAfterLast(owner, "/");
     }
 
     @Override
@@ -54,14 +62,20 @@ public class MessageCreationService implements IMessageCreationService {
         result.add("Return value depends on the following:");
 
         for (Integer integer : returnDependency.indexOfDependentArguments) {
-            String argumentType = parameters.get(integer - 1).getType().toString();
-            String name = parameters.get(integer - 1).getNameAsString();
+            String argumentType = "";
+            try {
+                argumentType = parameters.get(integer - 1).getType().toString();
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                continue;
+            }
 
+            String name = parameters.get(integer - 1).getNameAsString();
             FieldDependency correspondingFieldDep = getCorrespondingFieldDependencyOrNull(argumentType,
                                                                                           returnDependency.fieldDependencies);
 
             StringBuilder sb = new StringBuilder();
-            sb.append(StringUtils.repeat(' ', 4));
+            sb.append(StringUtils.repeat(' ', indentionSpaces));
             sb.append("Argument: ");
             if (correspondingFieldDep != null) {
                 sb.append(String.format("%s.%s (%s)", name, correspondingFieldDep.name, correspondingFieldDep.desc));
@@ -86,10 +100,36 @@ public class MessageCreationService implements IMessageCreationService {
         return result;
     }
 
+    @Override
+    public List<String> createNativeEffectsMessage(Set<NativeEffect> nativeEffectSet) {
+        List<String> result = new ArrayList<>();
+        result.add("The method calls native code:");
+
+        for (NativeEffect effect : nativeEffectSet) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(StringUtils.repeat(' ', indentionSpaces));
+            sb.append(String.format("%s.%s (origin: %s.%s",
+                            getShortOwner(effect.owner, "."),
+                            effect.name,
+                            getShortOwner(effect.originOwner, "."),
+                            effect.originName));
+
+            if (IODetectionHelper.isPossibleIOClass(effect.owner) || IODetectionHelper.isPossibleIOClass(effect.originOwner)) {
+                sb.append(" - Possible I/O)");
+            } else {
+                sb.append(")");
+            }
+
+            result.add(sb.toString());
+        }
+
+        return result;
+    }
+
     private String createFieldDependencyMessage(FieldDependency fieldDependency, boolean isStaticField) {
         String title = isStaticField ? "Static Field" : "Field";
-        String owner = isStaticField ? getShortOwner(fieldDependency.owner) : "this";
-        return StringUtils.repeat(' ', 4) +
+        String owner = isStaticField ? getShortOwner(fieldDependency.owner, "/") : "this";
+        return StringUtils.repeat(' ', indentionSpaces) +
                 title +
                 ": " +
                 String.format("%s.%s (%s)",
@@ -108,6 +148,10 @@ public class MessageCreationService implements IMessageCreationService {
         }
 
         return null;
+    }
+
+    private String getShortOwner(String owner, String separator) {
+        return StringUtils.substringAfterLast(owner, separator);
     }
 
     /**

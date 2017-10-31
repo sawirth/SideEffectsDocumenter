@@ -4,11 +4,14 @@ import ch.sawirth.model.purano.ClassRepresentation;
 import ch.sawirth.model.purano.MethodRepresentation;
 import ch.sawirth.services.IMatchingService;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
+import com.github.javaparser.ast.body.Parameter;
 import com.google.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -57,11 +60,11 @@ public class MatchingService implements IMatchingService {
     }
 
     public MethodRepresentation findMatchingMethodRepresentation(
-            MethodDeclaration methodDeclaration,
+            CallableDeclaration methodDeclaration,
             Set<MethodRepresentation> methodRepresentations)
     {
         List<MethodRepresentation> filtered = methodRepresentations.stream()
-                .filter(m -> m.name.endsWith(methodDeclaration.getNameAsString()))
+                .filter(m -> m.name.replace(".<init>", "").endsWith(methodDeclaration.getNameAsString()))
                 .collect(Collectors.toList());
 
         if (filtered.size() == 1) {
@@ -77,10 +80,10 @@ public class MatchingService implements IMatchingService {
             return filtered.get(0);
         }
 
-        //Filter by names of arguments
+        //Filter by type names
         List<MethodRepresentation> filteredByParameterNames = new ArrayList<>();
         for (MethodRepresentation methodRepresentation : filtered) {
-            if (hasParametersWithSameNames(methodRepresentation, methodDeclaration)) {
+            if (hasParametersWithSameTypes(methodRepresentation, methodDeclaration)) {
                 filteredByParameterNames.add(methodRepresentation);
             }
         }
@@ -93,13 +96,16 @@ public class MatchingService implements IMatchingService {
         return null;
     }
 
-    private boolean hasParametersWithSameNames(MethodRepresentation methodRepresentation, MethodDeclaration methodDeclaration) {
+    private boolean hasParametersWithSameTypes(MethodRepresentation methodRepresentation, CallableDeclaration methodDeclaration) {
         List<String> methodRepNames = methodRepresentation.methodArguments.stream()
-                .map(a -> a.name)
+                .map(argument -> argument.contains(".")
+                        ? StringUtils.substringAfterLast(argument, ".")
+                        : argument)
                 .collect(Collectors.toList());
 
-        List<String> methodDeclarationNames = methodDeclaration.getParameters().stream()
-                .map(NodeWithSimpleName::getNameAsString)
+        NodeList<Parameter> parameters = methodDeclaration.getParameters();
+        List<String> methodDeclarationNames = parameters.stream()
+                .map(p -> p.getType().asString())
                 .collect(Collectors.toList());
 
         methodRepNames.removeAll(methodDeclarationNames);

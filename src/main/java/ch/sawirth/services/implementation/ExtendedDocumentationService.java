@@ -6,8 +6,10 @@ import ch.sawirth.model.purano.ReturnDependency;
 import ch.sawirth.services.IDocumentationService;
 import ch.sawirth.services.IJavadocCommentService;
 import ch.sawirth.services.IMessageCreationService;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
+import com.github.javaparser.javadoc.Javadoc;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +27,8 @@ public class ExtendedDocumentationService implements IDocumentationService {
     }
 
     @Override
-    public MethodDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
-        MethodDeclaration methodDeclaration = methodAndPurityResultPair.methodDeclaration;
+    public CallableDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
+        CallableDeclaration methodDeclaration = methodAndPurityResultPair.methodDeclaration;
         MethodRepresentation methodRep = methodAndPurityResultPair.methodRepresentation;
         boolean hasAlreadyJavadoc = methodDeclaration.getJavadoc().isPresent();
 
@@ -51,7 +53,10 @@ public class ExtendedDocumentationService implements IDocumentationService {
                                                                                         methodDeclaration.getParameters()));
         }
 
-        //Todo Native
+        if (!methodRep.nativeEffects.isEmpty()) {
+            linesForComment.add("");
+            linesForComment.addAll(messageCreationService.createNativeEffectsMessage(methodRep.nativeEffects));
+        }
 
         if (linesForComment.size() <= 0) {
             return methodDeclaration;
@@ -61,7 +66,8 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
         JavadocComment comment;
         if (hasAlreadyJavadoc) {
-            comment = javadocCommentService.appendToComment(methodDeclaration.getJavadocComment().get(), linesForComment);
+            JavadocComment existingComment = (JavadocComment) methodDeclaration.getJavadocComment().get();
+            comment = javadocCommentService.appendToComment(existingComment, linesForComment);
         } else {
             int column = 0;
             if (methodDeclaration.getRange().isPresent()) {

@@ -2,7 +2,7 @@ package ch.sawirth.services.implementation;
 
 import ch.sawirth.model.MethodAndPurityResultPair;
 import ch.sawirth.services.IDocumentationService;
-import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import org.apache.commons.lang3.StringUtils;
 import java.util.regex.Matcher;
@@ -13,21 +13,22 @@ public class DocumentationService implements IDocumentationService{
     private static final String PURITY_REGEX = "[*]+\\s<b>Purity:[a-zA-Z0-9 ]+</b><br>";
 
     @Override
-    public MethodDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
+    public CallableDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair) {
         createAndAddNewJavaDocComment(methodAndPurityResultPair.methodDeclaration,
                                       methodAndPurityResultPair.methodRepresentation.purityType);
 
         return methodAndPurityResultPair.methodDeclaration;
     }
 
-    private void createAndAddNewJavaDocComment(MethodDeclaration methodDeclaration, String purityType) {
+    private void createAndAddNewJavaDocComment(CallableDeclaration callableDeclaration, String purityType) {
         int column = 0;
-        if (methodDeclaration.getRange().isPresent()) {
-            column = methodDeclaration.getRange().get().begin.column;
+        if (callableDeclaration.getRange().isPresent()) {
+            column = callableDeclaration.getRange().get().begin.column;
         }
 
-        if (methodDeclaration.getJavadocComment().isPresent()) {
-            String content = methodDeclaration.getJavadocComment().get().getContent();
+        if (callableDeclaration.getJavadocComment().isPresent()) {
+            JavadocComment comment = (JavadocComment) callableDeclaration.getJavadocComment().get();
+            String content = comment.getContent();
             Pattern pattern = Pattern.compile(PURITY_REGEX);
             Matcher matcher = pattern.matcher(content);
 
@@ -40,11 +41,12 @@ public class DocumentationService implements IDocumentationService{
             }
 
             content = content.replaceAll("\r\n\\s+\r\n", "\r\n");
-            methodDeclaration.getJavadocComment().get().setContent(content);
+            comment.setContent(content);
         } else {
             JavadocComment comment = new JavadocComment(createPurityMessage(purityType, column, true));
-            methodDeclaration.setJavadocComment(comment);
+            callableDeclaration.setJavadocComment(comment);
         }
+
     }
 
     private static String createPurityMessage(String purityType, int whitespaces, boolean isNewComment) {

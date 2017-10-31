@@ -1,7 +1,7 @@
 package ch.sawirth.services;
 import ch.sawirth.model.MethodAndPurityResultPair;
-import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.CallableDeclaration;
 
 public interface IDocumentationService {
-    MethodDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair);
+    CallableDeclaration createDocumentation(MethodAndPurityResultPair methodAndPurityResultPair);
 }

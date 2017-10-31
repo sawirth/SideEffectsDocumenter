@@ -15,6 +15,11 @@ public class Main {
                 .build()
                 .parse(args);
 
+        System.out.println("Running with the following settings:");
+        System.out.println("Extended: " + arguments.doExtendedDocumentation);
+        System.out.println("Override files: " + arguments.doOverrideOriginalFiles);
+        System.out.println();
+
         Injector injector = Guice.createInjector(new SideEffectsDocumenterModule(arguments.doExtendedDocumentation));
         SideEffectsDocumenterService sideEffectsDocumenterService = injector.getInstance(SideEffectsDocumenterService.class);
 
@@ -23,5 +28,7 @@ public class Main {
         Set<JavaParserResult> javaParserResults = sideEffectsDocumenterService.parseJavaFiles(arguments.javaFilesRootFolder);
         sideEffectsDocumenterService.createPurityDocumentations(classRepresentations, javaParserResults);
         sideEffectsDocumenterService.createFilesForModifiedCompiliationUnits(javaParserResults);
+
+        System.out.println("Program finished");
     }
 }
