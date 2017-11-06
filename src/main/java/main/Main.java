@@ -2,6 +2,7 @@ package main;
 
 import ch.sawirth.model.purano.ClassRepresentation;
 import ch.sawirth.model.JavaParserResult;
+import ch.sawirth.utils.IODetectionHelper;
 import com.beust.jcommander.JCommander;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -20,8 +21,11 @@ public class Main {
         System.out.println("Override files: " + arguments.doOverrideOriginalFiles);
         System.out.println();
 
+        //Initialization
         Injector injector = Guice.createInjector(new SideEffectsDocumenterModule(arguments.doExtendedDocumentation));
         SideEffectsDocumenterService sideEffectsDocumenterService = injector.getInstance(SideEffectsDocumenterService.class);
+        IODetectionHelper ioDetectionHelper = IODetectionHelper.getInstance();
+        ioDetectionHelper.loadBlacklistTypes(arguments.IOListFilePath);
 
         //The four steps of the program: Import Purano - Parse Java-Files - Documentation - File creation
         Set<ClassRepresentation> classRepresentations = sideEffectsDocumenterService.importPuranoResult(arguments.puranoFilePath);

@@ -1,0 +1,14 @@
+# Insert a line for each type you want to mark as IO
+# You can add packages, classes and also single methods.
+# Lines starting with # will be ignored
+
+# Packages
+java.io
+org.apache.commons.io
+java.sql
+
+# Classes
+test.utils.FileWriterUtils
+
+# Methods
+test.NativeImpl.nativeCalculation

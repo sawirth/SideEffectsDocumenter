@@ -19,4 +19,7 @@ public class Arguments {
     @Parameter(names = {"-r", "-replace"}, description = "If set the original .java files will be overridden with the modified file. " +
             "Make sure you saved your original files and are using a VCS")
     boolean doOverrideOriginalFiles = false;
+
+    @Parameter(names = {"-IOWhitelist", "-io"}, description = "Path to the file containg IO types and packages")
+    String IOListFilePath;
 }

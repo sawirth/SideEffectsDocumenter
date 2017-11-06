@@ -102,13 +102,20 @@ public class MessageCreationService implements IMessageCreationService {
         for (Integer integer : returnDependency.indexOfDependentArguments) {
             String argumentType = "";
             try {
-                argumentType = parameters.get(integer - 1).getType().toString();
+                argumentType = parameters.get(integer).getType().toString();
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
                 continue;
             }
 
-            String name = parameters.get(integer - 1).getNameAsString();
+            String name = "";
+            try {
+                name = parameters.get(integer ).getNameAsString();
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+                continue;
+            }
+
             FieldDependency correspondingFieldDep = getCorrespondingFieldDependencyOrNull(argumentType,
                                                                                           returnDependency.fieldDependencies);
 
@@ -141,12 +148,17 @@ public class MessageCreationService implements IMessageCreationService {
     @Override
     public List<String> createNativeEffectsMessage(Set<NativeEffect> nativeEffectSet) {
         List<String> result = new ArrayList<>();
-        result.add("The method calls native code:");
+        if (nativeEffectSet.stream().allMatch(e -> e.isDynamicEffect)) {
+            result.add("The method might call native code depending on the actual type:");
+        } else {
+            result.add("The method calls native code:");
+        }
+
 
         Set<NativeEffect> staticEffects = nativeEffectSet.stream().filter(e -> !e.isDynamicEffect).collect(Collectors.toSet());
         Set<NativeEffect> dynamicEffects = nativeEffectSet.stream().filter(e -> e.isDynamicEffect).collect(Collectors.toSet());
 
-        if (staticEffects.size() > 1 && dynamicEffects.size() > 1) {
+        if (staticEffects.size() > 0 && dynamicEffects.size() > 0) {
             result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Static effects");
         }
 
@@ -154,7 +166,7 @@ public class MessageCreationService implements IMessageCreationService {
             result.add(createSingleNativeEffectMessage(effect));
         }
 
-        if (dynamicEffects.size() > 1) {
+        if (dynamicEffects.size() > 0) {
             result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Dynamic effects (i.e. from subclasses)");
         }
 
@@ -174,8 +186,10 @@ public class MessageCreationService implements IMessageCreationService {
                                 getShortOwner(nativeEffect.originOwner, "."),
                                 nativeEffect.originName));
 
-        if (IODetectionHelper.isPossibleIOClass(nativeEffect.owner)
-                || IODetectionHelper.isPossibleIOClass(nativeEffect.originOwner)) {
+        String fullQualifier = nativeEffect.owner + "." + nativeEffect.name;
+        String originFullQualifierName = nativeEffect.originOwner + "." + nativeEffect.originName;
+        if (IODetectionHelper.getInstance().isPossibleIO(fullQualifier)
+                || IODetectionHelper.getInstance().isPossibleIO(originFullQualifierName)) {
             sb.append(" - Possible I/O)");
         } else {
             sb.append(")");
