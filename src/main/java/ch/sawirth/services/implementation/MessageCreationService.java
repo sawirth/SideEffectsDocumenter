@@ -12,29 +12,62 @@ import java.util.stream.Collectors;
 
 public class MessageCreationService implements IMessageCreationService {
 
-    private final int indentionSpaces = 4;
+    private final int indentionSpaces = 6;
 
     @Override
     public List<String> createArgumentModifierMessage(List<ArgumentModifier> argumentModifiers, List<Parameter> parameters) {
         List<String> result = new ArrayList<>();
         result.add("Modifies the following arguments:");
+        argumentModifiers.sort((a1, a2) -> Boolean.compare(a1.isDynamicEffect, a2.isDynamicEffect));
 
-        for (ArgumentModifier modifier : argumentModifiers) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(StringUtils.repeat(' ', indentionSpaces));
-            String name = "";
+        if (argumentModifiers.stream()
+                .anyMatch(a -> !a.isDynamicEffect)
+                && argumentModifiers.stream()
+                .anyMatch(a -> a.isDynamicEffect)) {
+            result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Static effects");
+        }
+
+        List<ArgumentModifier> staticEffects = argumentModifiers.stream()
+                .filter(a -> !a.isDynamicEffect)
+                .collect(Collectors.toList());
+
+        List<ArgumentModifier> dynamicEffects = argumentModifiers.stream()
+                .filter(a -> a.isDynamicEffect)
+                .collect(Collectors.toList());
+
+        for (ArgumentModifier modifier : staticEffects) {
             try {
-                name = parameters.get(modifier.argumentIndex).getNameAsString();
+                result.add(createSingleArgumentModifierMessage(modifier, parameters, false));
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
-                continue;
             }
+        }
 
-            sb.append(name);
-            result.add(sb.toString());
+        if (argumentModifiers.stream().anyMatch(a -> a.isDynamicEffect)) {
+            result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Dynamic effects (i.e. from subclasses)");
+        }
+
+        for (ArgumentModifier modifier : dynamicEffects) {
+            try {
+                result.add(createSingleArgumentModifierMessage(modifier, parameters, true));
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
         }
 
         return result;
+    }
+
+    private String createSingleArgumentModifierMessage(ArgumentModifier modifier, List<Parameter> parameters, boolean isDynamic) throws IndexOutOfBoundsException {
+        StringBuilder sb = new StringBuilder();
+        sb.append(StringUtils.repeat(' ', indentionSpaces));
+        String name = parameters.get(modifier.argumentIndex).getNameAsString();
+        sb.append(name);
+        if (isDynamic) {
+            sb.append(String.format(" (in %s)", getShortOwner(modifier.owner, ".")));
+        }
+
+        return sb.toString();
     }
 
     @Override
@@ -57,7 +90,12 @@ public class MessageCreationService implements IMessageCreationService {
     }
 
     @Override
-    public List<String> createReturnDependencyMessage(ReturnDependency returnDependency, List<Parameter> parameters) {
+    public List<String> createReturnDependencyMessage(
+            ReturnDependency returnDependency,
+            List<Parameter> parameters,
+            boolean isAbstract,
+            boolean isInterfaceMethod)
+    {
         List<String> result = new ArrayList<>();
         result.add("Return value depends on the following:");
 
@@ -90,11 +128,11 @@ public class MessageCreationService implements IMessageCreationService {
         }
 
         for (FieldDependency fieldDependency : returnDependency.staticFieldDependencies) {
-            result.add(createFieldDependencyMessage(fieldDependency, true));
+            result.add(createFieldDependencyMessage(fieldDependency, true, isAbstract, isInterfaceMethod));
         }
 
         for (FieldDependency fieldDependency : returnDependency.fieldDependencies) {
-            result.add(createFieldDependencyMessage(fieldDependency, false));
+            result.add(createFieldDependencyMessage(fieldDependency, false, isAbstract, isInterfaceMethod));
         }
 
         return result;
@@ -105,30 +143,62 @@ public class MessageCreationService implements IMessageCreationService {
         List<String> result = new ArrayList<>();
         result.add("The method calls native code:");
 
-        for (NativeEffect effect : nativeEffectSet) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(StringUtils.repeat(' ', indentionSpaces));
-            sb.append(String.format("%s.%s (origin: %s.%s",
-                            getShortOwner(effect.owner, "."),
-                            effect.name,
-                            getShortOwner(effect.originOwner, "."),
-                            effect.originName));
+        Set<NativeEffect> staticEffects = nativeEffectSet.stream().filter(e -> !e.isDynamicEffect).collect(Collectors.toSet());
+        Set<NativeEffect> dynamicEffects = nativeEffectSet.stream().filter(e -> e.isDynamicEffect).collect(Collectors.toSet());
 
-            if (IODetectionHelper.isPossibleIOClass(effect.owner) || IODetectionHelper.isPossibleIOClass(effect.originOwner)) {
-                sb.append(" - Possible I/O)");
-            } else {
-                sb.append(")");
-            }
+        if (staticEffects.size() > 1 && dynamicEffects.size() > 1) {
+            result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Static effects");
+        }
 
-            result.add(sb.toString());
+        for (NativeEffect effect : staticEffects) {
+            result.add(createSingleNativeEffectMessage(effect));
+        }
+
+        if (dynamicEffects.size() > 1) {
+            result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Dynamic effects (i.e. from subclasses)");
+        }
+
+        for (NativeEffect effect : dynamicEffects) {
+            result.add(createSingleNativeEffectMessage(effect));
         }
 
         return result;
     }
 
-    private String createFieldDependencyMessage(FieldDependency fieldDependency, boolean isStaticField) {
-        String title = isStaticField ? "Static Field" : "Field";
-        String owner = isStaticField ? getShortOwner(fieldDependency.owner, "/") : "this";
+    private String createSingleNativeEffectMessage(NativeEffect nativeEffect) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(StringUtils.repeat(' ', indentionSpaces));
+        sb.append(String.format("%s.%s (origin: %s.%s",
+                                getShortOwner(nativeEffect.owner, "."),
+                                nativeEffect.name,
+                                getShortOwner(nativeEffect.originOwner, "."),
+                                nativeEffect.originName));
+
+        if (IODetectionHelper.isPossibleIOClass(nativeEffect.owner)
+                || IODetectionHelper.isPossibleIOClass(nativeEffect.originOwner)) {
+            sb.append(" - Possible I/O)");
+        } else {
+            sb.append(")");
+        }
+
+        return sb.toString();
+    }
+
+    private String createFieldDependencyMessage(FieldDependency fieldDependency, boolean isStaticField, boolean isAbstract, boolean isInterface) {
+        String title = "Field";
+
+        if (isStaticField) {
+            title = "Static Field";
+        }else if (isInterface){
+            title = "Field of implementation";
+        } else if (!fieldDependency.isThisField) {
+            title = "Field of subclass";
+        }
+
+        String owner = (isStaticField || isAbstract || !fieldDependency.isThisField)
+                ? getShortOwner(fieldDependency.owner, ".")
+                : "this";
+
         return StringUtils.repeat(' ', indentionSpaces) +
                 title +
                 ": " +
@@ -160,9 +230,14 @@ public class MessageCreationService implements IMessageCreationService {
      * @return
      *
      * Modifies the following arguments
-     *     test
-     *     test
-     *     test
+     *   Static effects
+     *       test
+     *         test
+     *         test
+     *     Dynamic effects
+     *         test
+     *         test
+     *         test
      *
      * Modifies the following static fields
      *     test

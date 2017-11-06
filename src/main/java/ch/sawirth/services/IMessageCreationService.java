@@ -12,6 +12,6 @@ import java.util.Set;
 public interface IMessageCreationService {
     List<String> createArgumentModifierMessage(List<ArgumentModifier> argumentModifiers, List<Parameter> parameters);
     List<String> createStaticModifiersMessage(List<FieldModifier> staticFieldModifiers);
-    List<String> createReturnDependencyMessage(ReturnDependency returnDependency, List<Parameter> parameters);
+    List<String> createReturnDependencyMessage(ReturnDependency returnDependency, List<Parameter> parameters, boolean isAbstract, boolean isInterfaceMethod);
     List<String> createNativeEffectsMessage(Set<NativeEffect> nativeEffectSet);
 }

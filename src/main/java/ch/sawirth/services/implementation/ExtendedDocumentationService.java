@@ -6,7 +6,9 @@ import ch.sawirth.model.purano.ReturnDependency;
 import ch.sawirth.services.IDocumentationService;
 import ch.sawirth.services.IJavadocCommentService;
 import ch.sawirth.services.IMessageCreationService;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.CallableDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.javadoc.Javadoc;
@@ -47,10 +49,22 @@ public class ExtendedDocumentationService implements IDocumentationService {
             linesForComment.add("");
         }
 
+        Node parentNode = methodDeclaration.getParentNode().isPresent()
+                ? methodDeclaration.getParentNode().get()
+                : null;
+
+        boolean isInterfaceMethod = false;
+        if(parentNode != null && parentNode instanceof ClassOrInterfaceDeclaration) {
+            ClassOrInterfaceDeclaration parent = (ClassOrInterfaceDeclaration) parentNode;
+            isInterfaceMethod = parent.isInterface();
+        }
+
         if (hasReturnDependencyInfo(methodRep.returnDependency)) {
             linesForComment.add("");
             linesForComment.addAll(messageCreationService.createReturnDependencyMessage(methodRep.returnDependency,
-                                                                                        methodDeclaration.getParameters()));
+                                                                                        methodDeclaration.getParameters(),
+                                                                                        methodDeclaration.isAbstract(),
+                                                                                        isInterfaceMethod));
         }
 
         if (!methodRep.nativeEffects.isEmpty()) {
