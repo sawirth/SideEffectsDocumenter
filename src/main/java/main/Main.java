@@ -31,7 +31,7 @@ public class Main {
         Set<ClassRepresentation> classRepresentations = sideEffectsDocumenterService.importPuranoResult(arguments.puranoFilePath);
         Set<JavaParserResult> javaParserResults = sideEffectsDocumenterService.parseJavaFiles(arguments.javaFilesRootFolder);
         sideEffectsDocumenterService.createPurityDocumentations(classRepresentations, javaParserResults);
-        sideEffectsDocumenterService.createFilesForModifiedCompiliationUnits(javaParserResults);
+        sideEffectsDocumenterService.createFilesForModifiedCompiliationUnits(javaParserResults, arguments.doOverrideOriginalFiles);
 
         System.out.println("Program finished");
     }

@@ -138,9 +138,9 @@ public class SideEffectsDocumenterService {
         return innerClassDeclarations;
     }
 
-    public void createFilesForModifiedCompiliationUnits(Set<JavaParserResult> javaParserResults) {
+    public void createFilesForModifiedCompiliationUnits(Set<JavaParserResult> javaParserResults, boolean doOverrideFiles) {
         for (JavaParserResult result : javaParserResults) {
-            fileWriterService.writeToFile(result.pathToFile, result.compilationUnit.toString());
+            fileWriterService.writeToFile(result.pathToFile, result.compilationUnit.toString(), doOverrideFiles);
         }
     }
 }

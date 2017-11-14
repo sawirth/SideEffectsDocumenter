@@ -16,9 +16,11 @@ public class FileWriterService implements IFileWriterService {
         this.logger = logger;
     }
 
-    public void writeToFile(Path path, String content) {
+    public void writeToFile(Path path, String content, boolean doOverrideFile) {
         if (Files.exists(path)) {
-            String fileName = path.toString().replace(".java", "_purity.java");
+            String fileName = doOverrideFile
+                    ? path.toString()
+                    : path.toString().replace(".java", "_purity.java");
             try {
                 Files.write(Paths.get(fileName), content.getBytes());
             } catch (IOException e) {

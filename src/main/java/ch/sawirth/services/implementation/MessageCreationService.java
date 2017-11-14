@@ -154,7 +154,6 @@ public class MessageCreationService implements IMessageCreationService {
             result.add("The method calls native code:");
         }
 
-
         Set<NativeEffect> staticEffects = nativeEffectSet.stream().filter(e -> !e.isDynamicEffect).collect(Collectors.toSet());
         Set<NativeEffect> dynamicEffects = nativeEffectSet.stream().filter(e -> e.isDynamicEffect).collect(Collectors.toSet());
 
