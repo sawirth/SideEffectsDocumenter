@@ -24,7 +24,7 @@ public class IODetectionHelper {
 
         Set<String> lines = new HashSet<>();
         try (Stream<String> stream = Files.lines(Paths.get(pathToBlacklist))) {
-            stream.filter(s -> !s.startsWith("#")).forEach(lines::add);
+            stream.filter(s -> !s.startsWith("#") && !s.isEmpty()).forEach(lines::add);
         } catch (IOException e) {
             e.printStackTrace();
         }

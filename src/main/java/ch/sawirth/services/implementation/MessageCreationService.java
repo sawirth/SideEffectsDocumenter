@@ -62,9 +62,20 @@ public class MessageCreationService implements IMessageCreationService {
         StringBuilder sb = new StringBuilder();
         sb.append(StringUtils.repeat(' ', indentionSpaces));
         String name = parameters.get(modifier.argumentIndex).getNameAsString();
+
         sb.append(name);
-        if (isDynamic) {
-            sb.append(String.format(" (in %s)", getShortOwner(modifier.owner, ".")));
+        if (!modifier.owner.isEmpty()) {
+            String owner = getShortOwner(modifier.owner, ".");
+            sb.append(String.format(" (via %s.%s",
+                                    owner,
+                                    modifier.name));
+
+            String originOwner = getShortOwner(modifier.originOwner, ".");
+            if (originOwner.equals(owner)) {
+                sb.append(")");
+            } else {
+                sb.append(String.format(" - origin: %s.%s)", originOwner, modifier.originName));
+            }
         }
 
         return sb.toString();
@@ -179,18 +190,28 @@ public class MessageCreationService implements IMessageCreationService {
     private String createSingleNativeEffectMessage(NativeEffect nativeEffect) {
         StringBuilder sb = new StringBuilder();
         sb.append(StringUtils.repeat(' ', indentionSpaces));
-        sb.append(String.format("%s.%s (origin: %s.%s",
-                                getShortOwner(nativeEffect.owner, "."),
-                                nativeEffect.name,
-                                getShortOwner(nativeEffect.originOwner, "."),
-                                nativeEffect.originName));
+
+        String owner = getShortOwner(nativeEffect.owner, ".");
+        sb.append(String.format("%s.%s",
+                                owner,
+                                nativeEffect.name));
+
+        boolean addParenthesis = false;
+        if (!nativeEffect.originOwner.isEmpty() && !getShortOwner(nativeEffect.originOwner, ".").equals(owner)
+                && !nativeEffect.name.equals(nativeEffect.originName))
+        {
+            sb.append(String.format(" (origin: %s.%s",
+                                    getShortOwner(nativeEffect.originOwner, "."), nativeEffect.originName));
+
+            addParenthesis = true;
+        }
 
         String fullQualifier = nativeEffect.owner + "." + nativeEffect.name;
         String originFullQualifierName = nativeEffect.originOwner + "." + nativeEffect.originName;
         if (IODetectionHelper.getInstance().isPossibleIO(fullQualifier)
                 || IODetectionHelper.getInstance().isPossibleIO(originFullQualifierName)) {
             sb.append(" - Possible I/O)");
-        } else {
+        } else if (addParenthesis){
             sb.append(")");
         }
 
