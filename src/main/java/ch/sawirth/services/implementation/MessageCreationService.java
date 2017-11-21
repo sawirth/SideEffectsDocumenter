@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 public class MessageCreationService implements IMessageCreationService {
 
+
     private final int indentionSpaces = 6;
 
     @Override
@@ -134,12 +135,12 @@ public class MessageCreationService implements IMessageCreationService {
             sb.append(StringUtils.repeat(' ', indentionSpaces));
             sb.append("Argument: ");
             if (correspondingFieldDep != null) {
-                sb.append(String.format("%s.%s (%s)", name, correspondingFieldDep.name, correspondingFieldDep.desc));
+                sb.append(String.format("%s.%s (%s)", name, correspondingFieldDep.name, getShortOwner(correspondingFieldDep.desc, ".")));
 
                 //It has to be removed otherwise there would be duplicated information
                 returnDependency.fieldDependencies.remove(correspondingFieldDep);
             } else {
-                sb.append(String.format("%s (%s)", name, argumentType));
+                sb.append(String.format("%s (%s)", name, getShortOwner(argumentType, ".")));
             }
 
             result.add(sb.toString());
@@ -210,8 +211,10 @@ public class MessageCreationService implements IMessageCreationService {
         String originFullQualifierName = nativeEffect.originOwner + "." + nativeEffect.originName;
         if (IODetectionHelper.getInstance().isPossibleIO(fullQualifier)
                 || IODetectionHelper.getInstance().isPossibleIO(originFullQualifierName)) {
-            sb.append(" - Possible I/O)");
-        } else if (addParenthesis){
+            sb.append(" - Possible I/O");
+        }
+
+        if (addParenthesis){
             sb.append(")");
         }
 
@@ -255,7 +258,11 @@ public class MessageCreationService implements IMessageCreationService {
     }
 
     private String getShortOwner(String owner, String separator) {
-        return StringUtils.substringAfterLast(owner, separator);
+        if (owner.contains(separator)) {
+            return StringUtils.substringAfterLast(owner, separator);
+        }
+
+        return owner;
     }
 
     /**
