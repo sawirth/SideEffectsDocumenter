@@ -22,7 +22,9 @@ public class Main {
         System.out.println();
 
         //Initialization
-        Injector injector = Guice.createInjector(new SideEffectsDocumenterModule(arguments.doExtendedDocumentation));
+        Injector injector = Guice.createInjector(new SideEffectsDocumenterModule(arguments.doExtendedDocumentation,
+                                                                                 arguments.doCreateLinks));
+
         SideEffectsDocumenterService sideEffectsDocumenterService = injector.getInstance(SideEffectsDocumenterService.class);
         IODetectionHelper ioDetectionHelper = IODetectionHelper.getInstance();
         ioDetectionHelper.loadBlacklistTypes(arguments.IOListFilePath);

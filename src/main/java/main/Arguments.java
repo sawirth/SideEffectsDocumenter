@@ -22,4 +22,7 @@ public class Arguments {
 
     @Parameter(names = {"-IOWhitelist", "-io"}, description = "Path to the file containg IO types and packages")
     String IOListFilePath;
+
+    @Parameter(names = {"-l", "-link"}, description = "If set to true, method calls in the Javadoc will be created as links")
+    boolean doCreateLinks = false;
 }

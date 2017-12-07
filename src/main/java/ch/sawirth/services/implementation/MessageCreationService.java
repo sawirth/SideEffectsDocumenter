@@ -4,6 +4,8 @@ import ch.sawirth.model.purano.*;
 import ch.sawirth.services.IMessageCreationService;
 import ch.sawirth.utils.IODetectionHelper;
 import com.github.javaparser.ast.body.Parameter;
+import com.google.inject.Inject;
+import main.binding.DoCreateLinks;
 import org.apache.commons.lang3.StringUtils;;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MessageCreationService implements IMessageCreationService {
-
-
     private final int indentionSpaces = 6;
+    private final boolean doCreateLinks;
+
+    @Inject
+    public MessageCreationService(@DoCreateLinks boolean doCreateLinks) {
+        this.doCreateLinks = doCreateLinks;
+    }
 
     @Override
     public List<String> createArgumentModifierMessage(List<ArgumentModifier> argumentModifiers, List<Parameter> parameters) {
@@ -158,7 +164,7 @@ public class MessageCreationService implements IMessageCreationService {
     }
 
     @Override
-    public List<String> createNativeEffectsMessage(Set<NativeEffect> nativeEffectSet) {
+    public List<String> createNativeEffectsMessage(Set<NativeEffect> nativeEffectSet, Set<String> importAndPackageDeclarations) {
         List<String> result = new ArrayList<>();
         if (nativeEffectSet.stream().allMatch(e -> e.isDynamicEffect)) {
             result.add("The method might call native code depending on the actual type:");
@@ -174,7 +180,7 @@ public class MessageCreationService implements IMessageCreationService {
         }
 
         for (NativeEffect effect : staticEffects) {
-            result.add(createSingleNativeEffectMessage(effect));
+            result.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
         }
 
         if (dynamicEffects.size() > 0) {
@@ -182,28 +188,28 @@ public class MessageCreationService implements IMessageCreationService {
         }
 
         for (NativeEffect effect : dynamicEffects) {
-            result.add(createSingleNativeEffectMessage(effect));
+            result.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
         }
 
         return result;
     }
 
-    private String createSingleNativeEffectMessage(NativeEffect nativeEffect) {
+    private String createSingleNativeEffectMessage(NativeEffect nativeEffect, Set<String> importAndPackageDeclarations) {
         StringBuilder sb = new StringBuilder();
         sb.append(StringUtils.repeat(' ', indentionSpaces));
 
-        String owner = getShortOwner(nativeEffect.owner, ".");
-        sb.append(String.format("%s.%s",
-                                owner,
-                                nativeEffect.name));
+        boolean writeShortOwnerInLink = writeShortOwner(nativeEffect.owner, importAndPackageDeclarations);
+        String message = createNativeMessage(nativeEffect.owner, nativeEffect.name, writeShortOwnerInLink);
+        sb.append(message);
 
         boolean addParenthesis = false;
-        if (!nativeEffect.originOwner.isEmpty() && !getShortOwner(nativeEffect.originOwner, ".").equals(owner)
-                && !nativeEffect.name.equals(nativeEffect.originName))
+        String identifier = getShortOwner(nativeEffect.owner, ".") + "." + nativeEffect.name;
+        if (!nativeEffect.originOwner.isEmpty() && !nativeEffect.originName.isEmpty()
+                && !identifier.equals(getShortOwner(nativeEffect.originOwner, ".") + "." + nativeEffect.originName))
         {
-            sb.append(String.format(" (origin: %s.%s",
-                                    getShortOwner(nativeEffect.originOwner, "."), nativeEffect.originName));
-
+            boolean writeShortOriginOwnerLink = writeShortOwner(nativeEffect.originOwner, importAndPackageDeclarations);
+            String originMessage = " (origin: " + createNativeMessage(nativeEffect.originOwner, nativeEffect.originName, writeShortOriginOwnerLink);
+            sb.append(originMessage);
             addParenthesis = true;
         }
 
@@ -219,6 +225,21 @@ public class MessageCreationService implements IMessageCreationService {
         }
 
         return sb.toString();
+    }
+
+    private boolean writeShortOwner(String owner, Set<String> importAndPackageDeclarations) {
+        return importAndPackageDeclarations.contains(owner)
+                || importAndPackageDeclarations.stream().anyMatch(owner::contains);
+    }
+
+    private String createNativeMessage(String owner, String methodName, boolean writeShortOwnerLink) {
+        return this.doCreateLinks
+                ? "{@link " +
+                (writeShortOwnerLink
+                        ? getShortOwner(owner, ".")
+                        : owner)
+                    + "#" + methodName + "}"
+                : getShortOwner(owner, ".") + "." + methodName;
     }
 
     private String createFieldDependencyMessage(FieldDependency fieldDependency, boolean isStaticField, boolean isAbstract, boolean isInterface) {

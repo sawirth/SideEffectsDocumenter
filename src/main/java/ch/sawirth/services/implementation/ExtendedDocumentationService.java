@@ -6,13 +6,14 @@ import ch.sawirth.model.purano.ReturnDependency;
 import ch.sawirth.services.IDocumentationService;
 import ch.sawirth.services.IJavadocCommentService;
 import ch.sawirth.services.IMessageCreationService;
-import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ExtendedDocumentationService implements IDocumentationService {
 
@@ -21,7 +22,8 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
     @Inject
     public ExtendedDocumentationService(IMessageCreationService messageCreationService,
-                                        IJavadocCommentService javadocCommentService) {
+                                        IJavadocCommentService javadocCommentService)
+    {
         this.messageCreationService = messageCreationService;
         this.javadocCommentService = javadocCommentService;
     }
@@ -66,8 +68,9 @@ public class ExtendedDocumentationService implements IDocumentationService {
         }
 
         if (!methodRep.nativeEffects.isEmpty()) {
+            Set<String> importAndPackageDeclarations = getImportAndPackageDeclarations(methodDeclaration);
             linesForComment.add("");
-            linesForComment.addAll(messageCreationService.createNativeEffectsMessage(methodRep.nativeEffects));
+            linesForComment.addAll(messageCreationService.createNativeEffectsMessage(methodRep.nativeEffects, importAndPackageDeclarations));
         }
 
         if (linesForComment.size() <= 0) {
@@ -91,6 +94,38 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
         methodDeclaration.setJavadocComment(comment);
         return methodDeclaration;
+    }
+
+    private Set<String> getImportAndPackageDeclarations(CallableDeclaration methodDeclaration) {
+        Optional<Node> test = Optional.ofNullable(findCompilationUnitParentNode(methodDeclaration.getParentNode().get()));
+        if (test.isPresent()) {
+            CompilationUnit compilationUnit = (CompilationUnit) test.get();
+            NodeList<ImportDeclaration> importDeclarations = compilationUnit.getImports();
+
+            Set<String> importAndPackageDeclarations = importDeclarations.stream()
+                    .map(NodeWithName::getNameAsString)
+                    .collect(Collectors.toSet());
+
+            if (compilationUnit.getPackageDeclaration().isPresent()) {
+                importAndPackageDeclarations.add(compilationUnit.getPackageDeclaration().get().getNameAsString());
+            }
+
+            return importAndPackageDeclarations;
+        }
+
+        return null;
+    }
+
+    private Node findCompilationUnitParentNode(Node node) {
+        if (node != null && node instanceof CompilationUnit) {
+            return node;
+        }
+
+        if (node != null) {
+            return node.getParentNode().get();
+        }
+
+        return null;
     }
 
     private List<String> clearEmptyLines(List<String> lines) {

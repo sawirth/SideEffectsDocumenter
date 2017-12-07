@@ -3,13 +3,16 @@ package main;
 import ch.sawirth.services.*;
 import ch.sawirth.services.implementation.*;
 import com.google.inject.AbstractModule;
+import main.binding.DoCreateLinks;
 
 public class SideEffectsDocumenterModule extends AbstractModule {
 
     private boolean doExtendedDocumentation;
+    private boolean doCreateLinks;
 
-    public SideEffectsDocumenterModule(boolean doExtendedDocumentation) {
+    public SideEffectsDocumenterModule(boolean doExtendedDocumentation, boolean doCreateLinks) {
         this.doExtendedDocumentation = doExtendedDocumentation;
+        this.doCreateLinks = doCreateLinks;
     }
 
     @Override
@@ -20,6 +23,7 @@ public class SideEffectsDocumenterModule extends AbstractModule {
             bind(IDocumentationService.class).to(DocumentationService.class);
         }
 
+        bindConstant().annotatedWith(DoCreateLinks.class).to(doCreateLinks);
         bind(IJavaParserService.class).to(JavaParserService.class);
         bind(IDeserializationService.class).to(DeserializationService.class);
         bind(IFileReaderService.class).to(FileReaderService.class);
