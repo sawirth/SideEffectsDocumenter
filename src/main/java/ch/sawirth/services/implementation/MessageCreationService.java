@@ -233,6 +233,10 @@ public class MessageCreationService implements IMessageCreationService {
     }
 
     private String createNativeMessage(String owner, String methodName, boolean writeShortOwnerLink) {
+        if (methodName.contains("<init>")) {
+            methodName = getShortOwner(owner, ".") + "()";
+        }
+
         return this.doCreateLinks
                 ? "{@link " +
                 (writeShortOwnerLink
