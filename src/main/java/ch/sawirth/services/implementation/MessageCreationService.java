@@ -5,6 +5,7 @@ import ch.sawirth.services.IMessageCreationService;
 import ch.sawirth.utils.IODetectionHelper;
 import com.github.javaparser.ast.body.Parameter;
 import com.google.inject.Inject;
+import main.binding.DoCreateHtmlTags;
 import main.binding.DoCreateLinks;
 import org.apache.commons.lang3.StringUtils;;
 import java.util.ArrayList;
@@ -15,10 +16,12 @@ import java.util.stream.Collectors;
 public class MessageCreationService implements IMessageCreationService {
     private final int indentionSpaces = 6;
     private final boolean doCreateLinks;
+    private final boolean doCreateHtmlTags;
 
     @Inject
-    public MessageCreationService(@DoCreateLinks boolean doCreateLinks) {
+    public MessageCreationService(@DoCreateLinks boolean doCreateLinks, @DoCreateHtmlTags boolean doCreateHtmlTags) {
         this.doCreateLinks = doCreateLinks;
+        this.doCreateHtmlTags = doCreateHtmlTags;
     }
 
     @Override
@@ -42,26 +45,39 @@ public class MessageCreationService implements IMessageCreationService {
                 .filter(a -> a.isDynamicEffect)
                 .collect(Collectors.toList());
 
+        List<String> modifierMessages = new ArrayList<>();
         for (ArgumentModifier modifier : staticEffects) {
             try {
-                result.add(createSingleArgumentModifierMessage(modifier, parameters, false));
+                modifierMessages.add(createSingleArgumentModifierMessage(modifier, parameters, false));
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         }
+
+        if (this.doCreateHtmlTags) {
+            modifierMessages = convertToHtmlList(modifierMessages);
+        }
+
+        result.addAll(modifierMessages);
 
         if (argumentModifiers.stream().anyMatch(a -> a.isDynamicEffect)) {
             result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Dynamic effects (i.e. from subclasses)");
         }
 
+        modifierMessages.clear();
         for (ArgumentModifier modifier : dynamicEffects) {
             try {
-                result.add(createSingleArgumentModifierMessage(modifier, parameters, true));
+                modifierMessages.add(createSingleArgumentModifierMessage(modifier, parameters, true));
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
         }
 
+        if (this.doCreateHtmlTags) {
+            modifierMessages = convertToHtmlList(modifierMessages);
+        }
+
+        result.addAll(modifierMessages);
         return result;
     }
 
@@ -93,6 +109,7 @@ public class MessageCreationService implements IMessageCreationService {
         List<String> result = new ArrayList<>();
         result.add("Modifies the following static fields:");
 
+        List<String> modifierMessages = new ArrayList<>();
         for (FieldModifier modifier : staticFieldModifiers) {
             StringBuilder sb = new StringBuilder();
             sb.append(StringUtils.repeat(' ', indentionSpaces));
@@ -101,9 +118,29 @@ public class MessageCreationService implements IMessageCreationService {
                                     modifier.name,
                                     getShortOwner(modifier.type, "/")));
 
-            result.add(sb.toString());
+            modifierMessages.add(sb.toString());
         }
 
+        if (this.doCreateHtmlTags) {
+            modifierMessages = convertToHtmlList(modifierMessages);
+        }
+
+        result.addAll(modifierMessages);
+        return result;
+    }
+
+    private List<String> convertToHtmlList(List<String> messages) {
+        if (messages.size() <= 0) {
+            return messages;
+        }
+
+        List<String> result = new ArrayList<>();
+        result.add("<ul>");
+        for (String msg : messages) {
+            result.add("<li>" + msg + StringUtils.repeat(' ', indentionSpaces) + "</li>");
+        }
+
+        result.add("</ul>");
         return result;
     }
 
@@ -117,6 +154,7 @@ public class MessageCreationService implements IMessageCreationService {
         List<String> result = new ArrayList<>();
         result.add("Return value depends on the following:");
 
+        List<String> messages = new ArrayList<>();
         for (Integer integer : returnDependency.indexOfDependentArguments) {
             String argumentType = "";
             try {
@@ -149,17 +187,22 @@ public class MessageCreationService implements IMessageCreationService {
                 sb.append(String.format("%s (%s)", name, getShortOwner(argumentType, ".")));
             }
 
-            result.add(sb.toString());
+            messages.add(sb.toString());
         }
 
         for (FieldDependency fieldDependency : returnDependency.staticFieldDependencies) {
-            result.add(createFieldDependencyMessage(fieldDependency, true, isAbstract, isInterfaceMethod));
+            messages.add(createFieldDependencyMessage(fieldDependency, true, isAbstract, isInterfaceMethod));
         }
 
         for (FieldDependency fieldDependency : returnDependency.fieldDependencies) {
-            result.add(createFieldDependencyMessage(fieldDependency, false, isAbstract, isInterfaceMethod));
+            messages.add(createFieldDependencyMessage(fieldDependency, false, isAbstract, isInterfaceMethod));
         }
 
+        if (this.doCreateHtmlTags) {
+            messages = convertToHtmlList(messages);
+        }
+
+        result.addAll(messages);
         return result;
     }
 
@@ -179,18 +222,31 @@ public class MessageCreationService implements IMessageCreationService {
             result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Static effects");
         }
 
+        List<String> messages = new ArrayList<>();
         for (NativeEffect effect : staticEffects) {
-            result.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
+            messages.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
         }
+
+        if (this.doCreateHtmlTags) {
+            messages = convertToHtmlList(messages);
+        }
+
+        result.addAll(messages);
+        messages.clear();
 
         if (dynamicEffects.size() > 0) {
             result.add(StringUtils.repeat(' ', indentionSpaces / 2) + "Dynamic effects (i.e. from subclasses)");
         }
 
         for (NativeEffect effect : dynamicEffects) {
-            result.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
+            messages.add(createSingleNativeEffectMessage(effect, importAndPackageDeclarations));
         }
 
+        if (this.doCreateHtmlTags) {
+            messages = convertToHtmlList(messages);
+        }
+
+        result.addAll(messages);
         return result;
     }
 

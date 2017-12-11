@@ -12,6 +12,8 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.google.inject.Inject;
+import main.binding.DoCreateHtmlTags;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,13 +21,16 @@ public class ExtendedDocumentationService implements IDocumentationService {
 
     private final IMessageCreationService messageCreationService;
     private final IJavadocCommentService javadocCommentService;
+    private final boolean doCreateHtmlTags;
 
     @Inject
     public ExtendedDocumentationService(IMessageCreationService messageCreationService,
-                                        IJavadocCommentService javadocCommentService)
+                                        IJavadocCommentService javadocCommentService,
+                                        @DoCreateHtmlTags boolean doCreateHtmlTags)
     {
         this.messageCreationService = messageCreationService;
         this.javadocCommentService = javadocCommentService;
+        this.doCreateHtmlTags = doCreateHtmlTags;
     }
 
     @Override
@@ -35,7 +40,7 @@ public class ExtendedDocumentationService implements IDocumentationService {
         boolean hasAlreadyJavadoc = methodDeclaration.getJavadoc().isPresent();
 
         List<String> linesForComment = new ArrayList<>();
-        linesForComment.add("Purity: " + methodRep.purityType);
+        linesForComment.add("Purity: " + methodRep.purityType + (doCreateHtmlTags ? "   <br>" : ""));
 
         if (!methodRep.argumentModifiers.isEmpty()) {
             linesForComment.add("");

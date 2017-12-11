@@ -23,7 +23,8 @@ public class Main {
 
         //Initialization
         Injector injector = Guice.createInjector(new SideEffectsDocumenterModule(arguments.doExtendedDocumentation,
-                                                                                 arguments.doCreateLinks));
+                                                                                 arguments.doCreateLinks,
+                                                                                 arguments.doCreateHtmlLists));
 
         SideEffectsDocumenterService sideEffectsDocumenterService = injector.getInstance(SideEffectsDocumenterService.class);
         IODetectionHelper ioDetectionHelper = IODetectionHelper.getInstance();

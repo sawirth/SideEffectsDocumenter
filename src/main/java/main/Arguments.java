@@ -25,4 +25,7 @@ public class Arguments {
 
     @Parameter(names = {"-l", "-link"}, description = "If set to true, method calls in the Javadoc will be created as links")
     boolean doCreateLinks = false;
+
+    @Parameter(names = {"-t", "-tags"}, description = "If set to true, lists in Javadoc will be surrounded by HTML-tags")
+    boolean doCreateHtmlLists = false;
 }
