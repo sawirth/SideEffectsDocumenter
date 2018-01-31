@@ -102,9 +102,9 @@ public class ExtendedDocumentationService implements IDocumentationService {
     }
 
     private Set<String> getImportAndPackageDeclarations(CallableDeclaration methodDeclaration) {
-        Optional<Node> test = Optional.ofNullable(findCompilationUnitParentNode(methodDeclaration.getParentNode().get()));
-        if (test.isPresent()) {
-            CompilationUnit compilationUnit = (CompilationUnit) test.get();
+        Optional<Node> parentNode = Optional.ofNullable(findCompilationUnitParentNode(methodDeclaration.getParentNode().get()));
+        if (parentNode.isPresent() && parentNode.get() instanceof CompilationUnit) {
+            CompilationUnit compilationUnit = (CompilationUnit) parentNode.get();
             NodeList<ImportDeclaration> importDeclarations = compilationUnit.getImports();
 
             Set<String> importAndPackageDeclarations = importDeclarations.stream()
@@ -126,8 +126,8 @@ public class ExtendedDocumentationService implements IDocumentationService {
             return node;
         }
 
-        if (node != null) {
-            return node.getParentNode().get();
+        if (node != null && node.getParentNode().isPresent()) {
+            return findCompilationUnitParentNode(node.getParentNode().get());
         }
 
         return null;
